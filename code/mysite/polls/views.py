@@ -13,10 +13,20 @@ class IndexView(generic.ListView):
     context_object_name = 'latest_question_list'
 
     def get_queryset(self):
-        """Return the last five published questions."""
-        return Question.objects.filter(
+        listQuestions = Question.objects.filter(
         pub_date__lte=timezone.now()
     ).order_by('-pub_date')[:5]
+
+        listQuestions_withChoices = []
+
+        for question in listQuestions:
+            listChoices = Choice.objects.filter(question = question)
+            if len(listChoices) > 0 :
+                listQuestions_withChoices.append(question)
+
+
+        """Return the last five published questions."""
+        return listQuestions_withChoices
 
 
 class DetailView(generic.DetailView):
@@ -35,6 +45,12 @@ class DetailView(generic.DetailView):
 class ResultsView(generic.DetailView):
     model = Question
     template_name = 'polls/results.html'
+
+    def get_queryset(self):
+        """
+        Excludes any questions that aren't published yet.
+        """
+        return Question.objects.filter(pub_date__lte=timezone.now())
 
 
 def vote(request, question_id):
